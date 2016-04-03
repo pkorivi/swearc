@@ -1,6 +1,6 @@
 from sys import argv
 import zbar
-import Image
+from PIL import Image
 import cv2
 import json
 
@@ -14,7 +14,7 @@ def QRDetect(image):
     #gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY,dstCn=0)
     pil = Image.fromarray(image)
     width, height = pil.size
-    raw = pil.tostring()
+    raw = pil.tobytes()
     # wrap image data
     image = zbar.Image(width, height, 'Y800', raw)
     # scan the image for barcodes
