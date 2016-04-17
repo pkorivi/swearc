@@ -4,11 +4,11 @@ import numpy as np
 import cv2
 
 print cv2.__version__
+capture = cv2.VideoCapture(0)
+capture.set(3,640)
+capture.set(4,480)
 while True:
-	capture = cv2.VideoCapture(1)
 	#'''
-	capture.set(3,640)
-	capture.set(4,480)
 	ret,img = capture.read()
 	#'''
 	#img = cv2.imread('f1.jpg',1)
@@ -19,8 +19,8 @@ while True:
 	#print imgHSV
 	#'''
 	#Create bounds for Vending Machine Color
-	lower = (0,25,100) #np arrays for upper and lower thresholds
-	upper = (33,85,255)
+	lower = (12,37,89) #np arrays for upper and lower thresholds
+	upper = (39,85,191)
 	imgthreshed = cv2.inRange(imgHSV, lower, upper) #threshold imgHSV
 	cv2.imshow("HSV_Thresholded", imgthreshed)
 	image_1, cnts, hierarchy = cv2.findContours(imgthreshed.copy(),cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
