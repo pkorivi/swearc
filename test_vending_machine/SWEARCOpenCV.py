@@ -1,4 +1,4 @@
-
+   
 # |B|I|G| |F|A|C|E| |R|O|B|O|T|I|C|S|
 
 #import cv
@@ -7,30 +7,45 @@ import cv2
 import numpy as np
 import sys
 import math
-from colorama import init,Fore
+#from colorama import init,Fore
 from pyimagesearch.transform import four_point_transform
+
+from picamera.array import PiRGBArray
+from picamera import PiCamera
+import time
+import imutils
+from imutils.video import VideoStream
+import datetime
+
 
 DisplayImage = True
 
 
 print "Starting OpenCV"
+'''
 capture = cv2.VideoCapture(0)
 
 capture.set(3,640) #1024 640 1280 800 384
 capture.set(4,480) #600 480 960 600 288
+'''
+#unified Pi camera+ USB
+picamera = 1
+
+vs = VideoStream(usePiCamera = picamera > 0 ).start()
+
 
 if DisplayImage is True:
     cv2.namedWindow("camera", 0)
     cv2.namedWindow("transform", 0)
-    print (Fore.GREEN + "Creating OpenCV windows")
+    print  "Creating OpenCV windows"
     #cv2.waitKey(50)
     cv2.resizeWindow("camera", 640,480) 
     cv2.resizeWindow("transform", 300,300) 
-    print (Fore.GREEN + "Resizing OpenCV windows")
+    print  "Resizing OpenCV windows"
     #cv2.waitKey(50)
     cv2.moveWindow("camera", 400,30)
     cv2.moveWindow("transform", 1100,30)
-    print (Fore.GREEN + "Moving OpenCV window")
+    print  "Moving OpenCV window"
     cv2.waitKey(50)
 
 ##################################################################################################
@@ -97,12 +112,15 @@ def FindSymbol(ThresholdArray):
     SymbolFound = -1
     vmfound = -1
     time.sleep(0.1)#let image settle
+    '''
     ret,img = capture.read() #get a bunch of frames to make sure current frame is the most recent
     ret,img = capture.read() 
     ret,img = capture.read()
     ret,img = capture.read()
     ret,img = capture.read() #5 seems to be enough
-
+    '''
+    frame = vs.read()
+    img = frame.copy()
     imgHSV = cv2.cvtColor(img,cv2.COLOR_BGR2HSV) #convert img to HSV and store result in imgHSVyellow
     lower = np.array([ThresholdArray[0],ThresholdArray[1],ThresholdArray[2]]) #np arrays for upper and lower thresholds
     upper = np.array([ThresholdArray[3], ThresholdArray[4], ThresholdArray[5]])
@@ -113,7 +131,7 @@ def FindSymbol(ThresholdArray):
     
     for x in range (len(contours)):
         contourarea = cv2.contourArea(contours[x]) #get area of contour
-        if contourarea > 1000: #Discard contours with a small area as this may just be noise
+        if contourarea > 400: #Discard contours with a small area as this may just be noise
             arclength = cv2.arcLength(contours[x], True)
             approxcontour = cv2.approxPolyDP(contours[x], 0.08 * arclength, True) #Approximate contour to find square objects
             if len(approxcontour) == 4: #if approximated contour has 4 corner points
@@ -136,7 +154,9 @@ def FindSymbol(ThresholdArray):
                     cv2.waitKey(10)
                     new_vm = warp.copy()
                     gray1 = cv2.cvtColor(new_vm, cv2.COLOR_BGR2GRAY)
+                    vmfound = 1
                     #Try and match image to known targets
+                    '''
                     circles = cv2.HoughCircles(gray1.copy(), cv2.HOUGH_GRADIENT, 1.2, 100,param1=50,param2=90,minRadius=1,maxRadius=200)
                     # ensure at least some circles were found
                     if circles is not None:
@@ -154,14 +174,16 @@ def FindSymbol(ThresholdArray):
                         #cv2.waitKey(0)
                     else:
                         print 'Circles are Doomed'
-                        return -1
+                        #return -1
+                    '''
 
                     #Find lengths of the 4 sides of the target
                     leftedge = reformedcontour[3][1] - reformedcontour[0][1]
                     rightedge = reformedcontour[2][1] - reformedcontour[1][1]
                     topedge = reformedcontour[1][0] - reformedcontour[0][0]
                     bottomedge = reformedcontour[2][0] - reformedcontour[3][0]
-
+                    print 'Side Leghts',leftedge,rightedge,topedge,bottomedge
+                    print 'Reform Contour', reformedcontour
                     #Find approximate distance to target
                     if leftedge > rightedge:
                         LongestSide = leftedge
@@ -172,24 +194,24 @@ def FindSymbol(ThresholdArray):
                     if bottomedge > LongestSide:
                         LongestSide = bottomedge
                     Distance = (640.00*14)/LongestSide #focal length x Actual Border width / size of Border in pixels
-                    print (Fore.GREEN + "Distance= " + str(Distance))
+                    print "Distance= " + str(Distance)
 
                     #Find which way symbol is facing and width of target to gauge angle
                     EdgeDifference = leftedge - rightedge
                     if EdgeDifference > 0:
-                        print (Fore.GREEN + "Symbol is to the robots left")
+                        print "Symbol is to the robots left"
                         SymbolLocation = "LEFT"
                     elif EdgeDifference == 0:
-                        print (Fore.GREEN + "Symbol is dead ahead")
+                        print "Symbol is dead ahead"
                         SymbolLocation = "AHEAD"
                     else:
-                        print (Fore.GREEN + "Symbol is to the robots right")
+                        print "Symbol is to the robots right"
                         SymbolLocation = "RIGHT"
 
                     width = (topedge + bottomedge) / 2
                     height = (leftedge + rightedge) / 2
                     whratio = width / height
-                    print (Fore.GREEN + "W/H Ratio = " + str(whratio))
+                    print  "W/H Ratio = " + str(whratio)
                     #time.sleep(1)
 
                     #draw box around target and a circle to mark the centre point

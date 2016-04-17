@@ -1,36 +1,41 @@
 import cv2
 import numpy as np
-from colorama import init,Fore
+#from colorama import init,Fore
 from pyimagesearch.transform import four_point_transform
 import time
+import math
 import SWEARCOpenCV
+import neatoCom as robot
 
-BrownObjects = [5,5,23,225,119,170]
+symbol = 'VM'
+BrownObjects = [24,44,63,76,255,113]
 
 def TurnToTarget(TurnAngle, speed):
     print "Turning to face Target"
     if TurnAngle > 0:
         print "Turn Right"
-        #RobotData = RobotMove(0,TurnAngle) 
+        RobotData = RobotMove(0,TurnAngle) 
     elif TurnAngle < 0:
         print "Turn Left"
-        #RobotData = RobotMove(0, TurnAngle)
+        RobotData = RobotMove(0, TurnAngle)
     
 
-def AlignToTarget(symbol):
+def AlignToTarget():
+    symbol = 'VM'
     while True:
-        TargetData = CheckForTarget(Symbol,3) #Check 3 times to see if target is still there
+        TargetData = CheckForTarget(3) #Check 3 times to see if target is still there
         if TargetData == -1:
             print " Lost Target "
         else:#If target is still there, turn robot to face target
             HeadAngles = LookAtTarget(TargetData[0], TargetData[1])
             HeadPanAngle = HeadAngles[0]
             HeadTiltAngle = HeadAngles[1]
-            if abs(HeadPanAngle) < 4: #When robot is looking at target, if head angle is less than 4 degrees either way
+            print 'HeadPanAngle', HeadPanAngle 
+            if abs(HeadPanAngle) < 10: #When robot is looking at target, if head angle is less than 4 degrees either way
                                       #then target is dead ahead
                 return 1 #if target has been found and robot is now facing target, return 1
             else: 
-                print (Fore.BLUE + "Target NOT ahead - Adjusting Heading")
+                print  "Target NOT ahead - Adjusting Heading"
                 TurnToTarget(HeadPanAngle, 3) #Turn to face target
 
 
@@ -39,7 +44,7 @@ def AlignToTarget(symbol):
 
 def LookAtTarget(X,Y):
 
-    print "Lookinf for Target"
+    print "Looking for Target"
     HeadAngles = []
     XDist = X - 320.00
     XCamAngle = math.atan(XDist/640.00)
@@ -56,41 +61,44 @@ def LookAtTarget(X,Y):
     #Do Something
 def RobotMove(distance, angle):
     #Implement code to move robot in desired way
+    robot.iterativeTravel(angle,distance)
     return 1
 
 
-def MoveToTarget(symbol):
+def MoveToTarget():
     print "Moving to Target"
     while True:
         HeadPanAngle = 0
         HeadTiltAngle = 0
         #RobotData = HeadMove(HeadPanAngle,HeadTiltAngle, 8) #Centre head
-        TargetData = CheckForTarget(Symbol,3)#Capture image and check for symbol
+        TargetData = CheckForTarget(3)#Capture image and check for symbol
         if TargetData == -1:
-            print (Fore.BLUE + "No Target In Image")
+            print "No Target In Image"
             return -1 #if no target is found, return -1 immediately
         else: #Target is there as expected
-            print (Fore.BLUE + "Target found in MoveToTarget")
+            print  "Target found in MoveToTarget"
             if TargetData[2] < 100:
                 print "Target within 100cm"
                 if TargetData[2] < 25: #if target is too close
-                    print (Fore.BLUE + "Target too close - Reversing")
-                    RobotData = RobotMove(ROBOTREVERSE, 30, AutoSpeed, 0, 255)#back up a bit
-                if TargetData[5] > 0.98 and TargetData[5] < 1.02: #Target ahead
-                    print "Target Reached!!"
+                    print "Target too close - Reversing"
+                    RobotData = RobotMove(-20,0)
+                    #RobotData = RobotMove(ROBOTREVERSE, 30, AutoSpeed, 0, 255)#back up a bit
+                if TargetData[5] > 0.96 and TargetData[5] < 1.04: #Target ahead
+                    print "Target straight Ahead !!"
                     attarget = False
                     while attarget == False:
-                        RobotData = GetData()
-                        if RobotData[5] > 20:
+                        #RobotData = GetData()
+                        if RobotData[2] > 30:
                             RobotData = RobotMove(20,0)
                             '''
-                            print (Fore.BLUE + "Sonar in MoveToTarget - " + str(RobotData[5]))
+                            print  "Sonar in MoveToTarget - " + str(RobotData[5])
                             print "LeftIR -", RobotData[0]
                             print "CentreIR -", RobotData[1]
                             print "RightIR -", RobotData[2]
                             '''
                         else:
                             attarget = True
+                            print 'target Reached'
             
                     #RobotData = RobotMove(ROBOTRIGHT, 200/TurnRatio, AutoSpeed, 0, 255)
                     #RobotData = RobotMove(ROBOTREVERSE, 30, AutoSpeed, 5, 80)
@@ -102,45 +110,54 @@ def MoveToTarget(symbol):
                         RobotData = RobotMove(ROBOTFORWARD, 30, AutoSpeed, 20, 100)
                         RobotData = RobotMove(ROBOTLEFT, 10, AutoSpeed, 0, 255)
                         '''
-                        Result = AlignToTarget(Symbol)
-                    else:
+                        Result = AlignToTarget()
+                    elif TargetData[4] == "RIGHT":
                         '''
                         RobotData = RobotMove(ROBOTLEFT, 10, AutoSpeed, 0, 255)
                         RobotData = RobotMove(ROBOTFORWARD, 30, AutoSpeed, 20, 100)
                         RobotData = RobotMove(ROBOTRIGHT, 10, AutoSpeed, 0, 255)
                         '''
-                        Result = AlignToTarget(Symbol)
+                        Result = AlignToTarget()
+                    else: #Target is head so just aligh
+                        Result = AlignToTarget()
+
                     
             else:
                 print "Target further than 100cm"
-                Result = AlignToTarget(Symbol)
+                Result = AlignToTarget()
                 if Result ==1:
                     print "Moving Forward"
+                    RobotData = RobotMove(20,0)
                     #RobotData = RobotMove(ROBOTFORWARD, 100, AutoSpeed, 10, 100) #
+                    '''
                     if RobotData[6] < 100 and RobotData[7] < 100:
                         print "Obstacle encountered"
                         return -1
+                    '''
 
 
-def CheckForTarget(symbol,tries):
+def CheckForTarget(tries):
+    print 'Check for Symbol'
     for x in range (0,tries):
         TargetData = SWEARCOpenCV.FindSymbol(BrownObjects)
+        print 'CFS : Target data', TargetData
         if TargetData != -1:#Target present          
             if TargetData[3] == 1: #if its the correct target type
                 return TargetData #return straight away if correct symbol found
     return -1
 
 
-def ScanForTarget(symbol):
+def ScanForTarget():
     returndata = -1
     print "Scanning for Target"
-    TargetData = CheckForTarget(symbol,1)
+    TargetData = CheckForTarget(1)
+    print 'Targetata : ',TargetData 
     #Capture image and check for symbol
     if TargetData == -1:
         print " Not good -No Image in Vicinity"
     else:
         print "I found my Crush"
-        Aligned = AlignToTarget(symbol)
+        Aligned = AlignToTarget()
         if Aligned == 1:
             return 1
     #Nothing found - Dump the stuff.   
@@ -151,13 +168,16 @@ def ScanForTarget(symbol):
 
 print "Mission Robot Navigation abut to Start"
 Run = True
-
+symbol = 'VM'
 while True:
     
     while Run is True:
+        print "##################################################"
+        print "     "
         TargetAquired = False
         for x in range (0,4):
-            Result = ScanForTarget("VM")
+            print 'Scanning Angle of Robot:', x*90 
+            Result = ScanForTarget()
             if Result == -1:
                 print "No Target found from scan"
                 #turn 120 degrees to the left
@@ -168,7 +188,7 @@ while True:
                 break
         
         if TargetAquired is True:
-            result = MoveToTarget("VM")
+            result = MoveToTarget()
             if result == 1:
                 Run = False
                 print "Mission Accomplished"
@@ -177,5 +197,7 @@ while True:
                 #Move to a different location and scan again here
                 Run = True
                 print "Press button 0 to start"
-
+         #time.sleep(4)
+        print "########################"
+        print '#end#'
 
