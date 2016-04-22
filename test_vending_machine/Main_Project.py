@@ -8,22 +8,15 @@ import SWEARCOpenCV
 import neatoCom as robot
 
 symbol = 'VM'
-BrownObjects = [24,44,63,76,255,113]
-
-def TurnToTarget(TurnAngle, speed):
-    print "Turning to face Target"
-    if TurnAngle > 0:
-        print "Turn Right"
-        RobotData = RobotMove(0,TurnAngle) 
-    elif TurnAngle < 0:
-        print "Turn Left"
-        RobotData = RobotMove(0, TurnAngle)
+BrownObjects = [22,17,18,101,255,105]
     
+def GetData():
+    return robot.getScan()
 
 def AlignToTarget():
-    symbol = 'VM'
+    print 'Aligning to Target'
     while True:
-        TargetData = CheckForTarget(3) #Check 3 times to see if target is still there
+        TargetData = CheckForTarget(1) #Check 3 times to see if target is still there
         if TargetData == -1:
             print " Lost Target "
         else:#If target is still there, turn robot to face target
@@ -38,13 +31,9 @@ def AlignToTarget():
                 print  "Target NOT ahead - Adjusting Heading"
                 TurnToTarget(HeadPanAngle, 3) #Turn to face target
 
-
-
-
-
 def LookAtTarget(X,Y):
 
-    print "Looking for Target"
+    print "Look at target : Checking the X and Y cam angles"
     HeadAngles = []
     XDist = X - 320.00
     XCamAngle = math.atan(XDist/640.00)
@@ -53,12 +42,20 @@ def LookAtTarget(X,Y):
     HeadTiltAngle = math.degrees(YCamAngle)
     HeadPanAngle =  math.degrees(XCamAngle)
     #RobotData = HeadMove(HeadPanAngle,HeadTiltAngle, 8)
+    #RobotData = RobotMove(0,HeadPanAngle) 
     HeadAngles.append(HeadPanAngle)
     HeadAngles.append(HeadTiltAngle)
     return HeadAngles
 
+def TurnToTarget(TurnAngle, speed):
+    print "Turning to face Target"
+    if TurnAngle > 0:
+        print "Turn Right"
+        RobotData = RobotMove(0,TurnAngle) 
+    elif TurnAngle < 0:
+        print "Turn Left"
+        RobotData = RobotMove(0, TurnAngle)
 
-    #Do Something
 def RobotMove(distance, angle):
     #Implement code to move robot in desired way
     robot.iterativeTravel(angle,distance)
@@ -87,8 +84,9 @@ def MoveToTarget():
                     print "Target straight Ahead !!"
                     attarget = False
                     while attarget == False:
-                        #RobotData = GetData()
-                        if RobotData[2] > 30:
+                        RobotData = GetData()
+                        #distance_ahead = min(RobotData)
+                        if (RobotData/10) > 30:
                             RobotData = RobotMove(20,0)
                             '''
                             print  "Sonar in MoveToTarget - " + str(RobotData[5])
@@ -105,6 +103,10 @@ def MoveToTarget():
                     return 1
                 else:
                     if TargetData[4] == "LEFT":
+
+                        RobotData = RobotMove(0,-10)
+                        RobotData = RobotMove(10,0)
+                        RobotData = RobotMove(0,10)
                         '''
                         RobotData = RobotMove(ROBOTRIGHT, 10, AutoSpeed, 0, 255)
                         RobotData = RobotMove(ROBOTFORWARD, 30, AutoSpeed, 20, 100)
@@ -117,6 +119,9 @@ def MoveToTarget():
                         RobotData = RobotMove(ROBOTFORWARD, 30, AutoSpeed, 20, 100)
                         RobotData = RobotMove(ROBOTRIGHT, 10, AutoSpeed, 0, 255)
                         '''
+                        RobotData = RobotMove(0,10)
+                        RobotData = RobotMove(10,0)
+                        RobotData = RobotMove(0,-10)
                         Result = AlignToTarget()
                     else: #Target is head so just aligh
                         Result = AlignToTarget()

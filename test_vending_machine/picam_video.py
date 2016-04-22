@@ -2,16 +2,33 @@ from pyimagesearch.transform import four_point_transform
 import imutils
 import numpy as np
 import cv2
+from picamera.array import PiRGBArray
+from picamera import PiCamera
+import time
+
 
 print cv2.__version__
-capture = cv2.VideoCapture(0)
-capture.set(3,640)
-capture.set(4,480)
+camera = PiCamera()
+camera.resolution = (640,480)
+camera.framerate = 16
+rawCapture = PiRGBArray(camera, size = (640,480))
+
+print "WarmUp"
+time.sleep(2)
+
+time.sleep(0.1)
+
+camera.capture(rawCapture, format = "bgr")
+image = rawCapture.array
+#capture = cv2.VideoCapture(0)
+#capture.set(3,640)
+#capture.set(4,480)
 while True:
 	#'''
-	ret,img = capture.read()
+	#ret,img = capture.read()
 	#'''
 	#img = cv2.imread('f1.jpg',1)
+        img = rawCapture.array
 	orig = img.copy()
 	#img = cv2.imread('check.png',1)
 	imgHSV = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
