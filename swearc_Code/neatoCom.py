@@ -126,7 +126,7 @@ try:
     ser.write(b'setldsrotation on\n')
     time.sleep(4)
     getBattery()
-    getScan()
+    #getScan()
 
     speed = 0
     diff = 0

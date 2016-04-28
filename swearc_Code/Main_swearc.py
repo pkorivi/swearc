@@ -6,11 +6,16 @@ import time
 import math
 import SWEARCOpenCV
 import neatoCom as robot
+import sonar
+import sys
+import RPi.GPIO as GPIO
+import serial
+
 robotstate = ['start','SearchingTarget','NoTargetAround', 'MovingTowardsTarget','Missed_Target','Obstacle_encountered', 'Within_100cm',\
-             'Within_30cm', 'Button_Routine','Button_pressed', 'Button_Missed', 'Reading_QR','QR_error']
+             'Within_30cm', 'Button_Routine','Button_pressed', 'Button_Missed', 'Reading_QR','QR_error','Task_Finished']
 list(enumerate(robotstate))
 
-GrayObjects = [22,17,18,101,255,105]
+GrayObjects = [38,66,40,136,255,127]
 
 #Switch case to implement state Machines
 class switch(object):
@@ -34,7 +39,7 @@ class switch(object):
             return False
 
 def GetData():
-    return robot.getScan()
+    return sonar.measure_mode()
 
 def AlignToTarget():
     print 'Aligning to Target'
@@ -109,14 +114,14 @@ def MoveToTarget():
                     while attarget == False:
                         RobotData = GetData()
                         print RobotData,'RobotData'
-                        
-                        #distance_ahead = min(RobotData)
-                        if (RobotData/10) > 30:
-                            #RobotData = RobotMove(200,0)
+                        if (RobotData) > 40:
+                            RobotData = RobotMove(150,0)
+                            '''
                             Result = AlignToTarget()
                             if Result == -1:  
                                 return -1
                             print 'Change the code'
+                            '''
                         else:
                             attarget = True
                             print 'target Reached'
@@ -125,13 +130,13 @@ def MoveToTarget():
                     if TargetData[4] == "LEFT":
                         print 'Turn left'
                         RobotData = RobotMove(0,-60)
-                        RobotData = RobotMove(50,0)
+                        RobotData = RobotMove(100,0)
                         RobotData = RobotMove(0,60)
             
                     else:
                         print 'Turning right'
                         RobotData = RobotMove(0,60)
-                        RobotData = RobotMove(50,0)
+                        RobotData = RobotMove(100,0)
                         RobotData = RobotMove(0,-60)
                     
                     Result = AlignToTarget()
@@ -183,8 +188,7 @@ robotstate = 'start'
 print "Mission: Robot Navigation about to Start"
 while True:
     while Run is True:
-        print "##################################################"
-        print "     "
+        print "Loop"
         for case in switch(robotstate):
 			if case('start'):
 				print 'Start - caliberate'
@@ -242,6 +246,7 @@ while True:
 				break
 			if case('Button_Routine'):
 				print 'Button_Routine'
+				robotstate = 'Task_Finished'
 				break
 			if case('Button_pressed'):
 				print 'Button_pressed'
@@ -256,10 +261,15 @@ while True:
 			if case('QR_error'):
 				print 'QR_error'
 				break
+                        if case('Task_Finished'):
+				print 'Task Fnished'
+                                GPIO.cleanup()
+				robot.closeSerial()
+				sys.exit('Button ROutine not defined')
+				break
 			if case():
 				print 'Default_ Dont know what to do'
 				break
 
-        print "########################"
         print '#end#'
 
