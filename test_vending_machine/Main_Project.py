@@ -8,6 +8,9 @@ import SWEARCOpenCV
 import neatoCom as robot
 
 symbol = 'VM'
+robotstates = ['SearchingTarget', 'MovingTowardsTarget','Missed_Target','Obstacle_encountered', 'Within_100cm',\
+             'Within_30cm', 'Button_Routine','Button_pressed', 'Button_Missed', 'Reading_QR','QR_error']
+
 BrownObjects = [22,17,18,101,255,105]
     
 def GetData():
