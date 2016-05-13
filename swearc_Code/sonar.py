@@ -53,6 +53,18 @@ def measure_mode():
   distance = data.most_common(1) #returns most frequent item
   return distance[0][0]
 
+def move_servo(angle):
+  GPIO.output(GPIO_servo, False)
+  t = 0.001+(0.000006*angle);
+  time.sleep(0.001)
+  for i in range(10):
+    GPIO.output(GPIO_servo, True)
+    time.sleep(t)
+    GPIO.output(GPIO_servo, False)
+    time.sleep(0.02-t)
+  
+  
+
 # -----------------------
 # Main Script
 # -----------------------
@@ -64,16 +76,34 @@ GPIO.setmode(GPIO.BCM)
 # Define GPIO to use on Pi
 GPIO_TRIGGER = 23
 GPIO_ECHO    = 24
+GPIO_servo   = 18
+
 
 print "Ultrasonic Measurement"
 
 # Set pins as output and input
 GPIO.setup(GPIO_TRIGGER,GPIO.OUT)  # Trigger
 GPIO.setup(GPIO_ECHO,GPIO.IN)      # Echo
+GPIO.setup(GPIO_servo,GPIO.OUT)    # Servo
 
 # Set trigger to False (Low)
 GPIO.output(GPIO_TRIGGER, False)
-
+'''
+move_servo(10)
+time.sleep(1)
+move_servo(20)
+time.sleep(1)
+move_servo(30)
+time.sleep(1)
+move_servo(20)
+time.sleep(1)
+move_servo(10)
+time.sleep(1)
+move_servo(0)
+time.sleep(1)
+move_servo(90)
+time.sleep(1)
+'''
 # Wrap main content in a try block so we can
 # catch the user pressing CTRL-C and run the
 # GPIO cleanup function. This will also prevent

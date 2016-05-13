@@ -29,7 +29,7 @@ def nothing(x):
 
 print 'start OPENCV'
 
-picamera = 0
+picamera = 1
 
 vs = VideoStream(usePiCamera = picamera > 0 ).start()
 '''
@@ -91,16 +91,16 @@ while True:
     #camera.capture_continuous(rawCapture, format = "bgr",use_video_port = True)
     #img = rawCapture.array
     #rawCapture.truncate(0)
-    #img = cv2.imread('t3.jpg',1)
+    #frame = cv2.imread('cam.jpg',1)
 
     frame = vs.read()
     #img = imutils.resize(frame, width =400)
     img = frame.copy()
-    imgHSV = cv2.cvtColor(img,cv2.COLOR_BGR2HSV) #convert img to HSV and store result in imgHSVyellow
+    #imgHSV = cv2.cvtColor(img,cv2.COLOR_BGR2HSV) #convert img to HSV and store result in imgHSVyellow
     lower = np.array([HLow, SLow, VLow]) #np arrays for upper and lower thresholds
     upper = np.array([HHigh, SHigh, VHigh])
 
-    imgthreshed = cv2.inRange(imgHSV, lower, upper) #threshold imgHSV
+    imgthreshed = cv2.inRange(img, lower, upper) #threshold imgHSV
     #imgthreshed = cv2.blur(imgthreshed,(3,3))
     cv2.imshow("View", img)
     cv2.imshow("camera", imgthreshed)

@@ -1,21 +1,28 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sun May 08 20:12:17 2016
+
+@author: Lollo
+"""
+
 import cv2
 import numpy as np
+#from colorama import init,Fore
 from pyimagesearch.transform import four_point_transform
 import time
 import math
-import SWEARCOpenCV
+import SWEARCOpenCVFACE
 import neatoCom as robot
 import sonar
 import sys
 import RPi.GPIO as GPIO
 import serial
-#import circles as button
 
 robotstate = ['start','SearchingTarget','NoTargetAround', 'MovingTowardsTarget','Missed_Target','Obstacle_encountered', 'Within_100cm',\
              'Within_30cm', 'Button_Routine','Button_pressed', 'Button_Missed', 'Reading_QR','QR_error','Task_Finished']
 list(enumerate(robotstate))
 
-GrayObjects = [29,30,130,85,173,195]
+GrayObjects = [38,66,40,136,255,127]
 
 #Switch case to implement state Machines
 class switch(object):
@@ -102,20 +109,20 @@ def MoveToTarget():
             return -1 #if no target is found, return -1 immediately
         else: #Target is there as expected
             print  "Target found in MoveToTarget"
-            if TargetData[2] < 100:
-                print "Target within 100cm"
+            if TargetData[2] < 300:
+                print "Target within 300cm"
                 if TargetData[2] < 30: #if target is too close
                     print "Target too close - Reversing"
                     RobotData = RobotMove(-100,0)
                     #RobotData = RobotMove(ROBOTREVERSE, 30, AutoSpeed, 0, 255)#back up a bit
-                if TargetData[5] > -10 and TargetData[5] < 10: #Target ahead
+                if TargetData[5] > 0.98 and TargetData[5] < 1.02: #Target ahead
                     print "Target straight Ahead !!"
                     attarget = False
                     while attarget == False:
                         RobotData = GetData()
                         print RobotData,'RobotData'
-                        if (RobotData) > 60:
-                            RobotData = RobotMove(150,0)
+                        if (RobotData) > 100:
+                            RobotData = RobotMove(100,0)
                             '''
                             Result = AlignToTarget()
                             if Result == -1:  
@@ -126,6 +133,7 @@ def MoveToTarget():
                             attarget = True
                             print 'target Reached'
                     return 1
+               ''' 
                 else:
                     if TargetData[4] == "LEFT":
                         print 'Turn left'
@@ -142,6 +150,7 @@ def MoveToTarget():
                     Result = AlignToTarget()
                     if Result == -1:  
                         return -1
+                        '''
             #else for target >100cm        
             else:
                 print "Target further than 100cm"
@@ -157,7 +166,8 @@ def MoveToTarget():
 def CheckForTarget(tries):
     print 'Check for Symbol'
     for x in range (0,tries):
-        TargetData = SWEARCOpenCV.FindSymbol(GrayObjects)
+        #TargetData = SWEARCOpenCV.FindSymbol(GrayObjects)
+        TargetData = SWEARCOpenCVFACE.FindHuman(GrayObjects)
         print 'CFS : Target data', TargetData
         if TargetData != -1:#Target present          
             if TargetData[3] == 1: #if its the correct target type
@@ -184,7 +194,6 @@ def ScanForTarget():
 
 #########Need to be chnaged to a switch
 Run = True
-#robotstate = 'Reading_QR'
 robotstate = 'start'
 print "Mission: Robot Navigation about to Start"
 while True:
@@ -213,9 +222,10 @@ while True:
 				break #break for searchingtarget
 			if case('NoTargetAround'):
 				print 'NoTargetAround'
-				RobotData = RobotMove(0,90)
-				RobotData = RobotMove(300,0)
-				RobotData = RobotMove(0,-90)
+				RobotData = RobotMove(0,45) #turn 45 degrees at a time to search
+				#RobotData = RobotMove(300,0)
+                       #RobotData = RobotMove(0,0)
+				#RobotData = RobotMove(0,-90)
 				robotstate = 'SearchingTarget'
 				break
 			if case('MovingTowardsTarget'):
@@ -247,49 +257,20 @@ while True:
 				break
 			if case('Button_Routine'):
 				print 'Button_Routine'
-				xcordi = SWEARCOpenCV.button_routine()
-				if len(xcordi)==2:
-                                    if (xcordi[0]-xcordi[1])>10:                                        #ARM IS TO RIGHT
-                                        RobotMove(0,-2)
-                                        print 'arm right'
-                                    elif (xcordi[0]-xcordi[1])<-10:
-                                        RobotMove(0,2)
-                                        print 'arm left'
-                                    else:
-                                        RobotMove(50,0)                                        
-                                        print 'move forward'
-                                        RobotData = GetData()
-                                        print RobotData,'RobotData'
-                                        if (RobotData) < 30:
-                                            robotstate = 'Button_pressed'
-                                else:
-                                    robotstate = 'Button_Missed'
+				robotstate = 'Task_Finished'
 				break
 			if case('Button_pressed'):
 				print 'Button_pressed'
-                                #SWEARCOpenCV.stopcamera()
-				#Moving Back to see QR Code
-				RobotMove(0,180)
-				RobotMove(800,0)
-				RobotMove(0,180)
-				robotstate = 'Reading_QR'
 				break
 			if case('Button_Missed'):
 				print 'Button_Missed'
-				robotstate = 'Reading_QR'
 				break
 			if case('Reading_QR'):
-				print 'Reading_QR'                                
-				qr_ret = SWEARCOpenCV.QR_Read()
-				if (qr_ret == 1):
-                                    print 'QR Success'
-                                    robotstate = 'Task_Finished'
-                                else:
-                                    robotstate = 'QR_error'
+				print 'Reading_QR'
+				Run = False
 				break
 			if case('QR_error'):
 				print 'QR_error'
-				robotstate = 'Task_Finished'
 				break
                         if case('Task_Finished'):
 				print 'Task Fnished'
@@ -302,4 +283,3 @@ while True:
 				break
 
         print '#end#'
-
