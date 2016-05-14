@@ -19,7 +19,7 @@ def RobotMove(distance, angle):
 
 def button_detect(image):
     #boundaries = [([0,125,125],[209,215,225])]
-    ThresholdArray = [0,125,125,209,215,225]
+    ThresholdArray = [0,132,124,209,232,223]
     #for (lower,upper) in boundaries:
     #    lower = np.array(lower,dtype="uint8")
     #    upper = np.array(upper,dtype="uint8")

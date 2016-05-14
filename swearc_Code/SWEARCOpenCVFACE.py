@@ -35,7 +35,7 @@ capture.set(3,640) #1024 640 1280 800 384
 capture.set(4,480) #600 480 960 600 288
 '''
 #unified Pi camera+ USB
-picamera = 1
+picamera = 0
 
 vs = VideoStream(usePiCamera = picamera > 0 ).start()
 
@@ -267,9 +267,12 @@ def FindHuman(ThresholdArray):
     frame = vs.read()
     img = frame.copy()
     
-    while 1:
-    ret, img = cap.read()
+    #while 1:
+    #ret, img = cap.read()
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    cv2.imshow('img',gray)
+    cv2.waitKey(1000)
+    print 'showing image'
     faces = face_cascade.detectMultiScale(gray, 1.3, 5)
 
     for (x,y,w,h) in faces:
@@ -296,11 +299,11 @@ def FindHuman(ThresholdArray):
             cv2.rectangle(roi_color,(ex,ey),(ex+ew,ey+eh),(0,255,0),2)
 
     cv2.imshow('img',img)
-    k = cv2.waitKey(30) & 0xff
-    if k == 27:
-        break
+    #k = cv2.waitKey(30) & 0xff
+    #if k == 27:
+        #break
 
-    cap.release()
+    vs.release()
     cv2.destroyAllWindows()
     #imgHSV = cv2.cvtColor(img,cv2.COLOR_BGR2HSV) #convert img to HSV and store result in imgHSVyellow
     #lower = np.array([ThresholdArray[0],ThresholdArray[1],ThresholdArray[2]]) #np arrays for upper and lower thresholds
@@ -309,7 +312,7 @@ def FindHuman(ThresholdArray):
     #imgthreshed = cv2.inRange(imgHSV, lower, upper) #threshold imgHSV
 
     #_,contours, hierarchy = cv2.findContours(imgthreshed,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)  
-   ''' 
+    ''' 
     for x in range (len(contours)):
         contourarea = cv2.contourArea(contours[x]) #get area of contour
         if contourarea > 400: #Discard contours with a small area as this may just be noise
@@ -332,8 +335,7 @@ def FindHuman(ThresholdArray):
                     gray1 = cv2.cvtColor(new_vm, cv2.COLOR_BGR2GRAY)
                     vmfound = 1
                     #Try and match image to known targets
-                    '''
-                    '''
+
                     circles = cv2.HoughCircles(gray1.copy(), cv2.HOUGH_GRADIENT, 1.2, 100,param1=50,param2=90,minRadius=1,maxRadius=200)
                     # ensure at least some circles were found
                     if circles is not None:
@@ -352,8 +354,7 @@ def FindHuman(ThresholdArray):
                     else:
                         print 'Circles are Doomed'
                         #return -1
-                    '''
-'''
+                    
                     #Find lengths of the 4 sides of the target
                     leftedge = reformedcontour[3][1] - reformedcontour[0][1]
                     rightedge = reformedcontour[2][1] - reformedcontour[1][1]
@@ -406,14 +407,13 @@ def FindHuman(ThresholdArray):
                         TargetData = [boxcentrex, boxcentrey, Distance, vmfound, SymbolLocation, whratio]
                         break
                         
-          '''
-                    if vmfound != -1: #If a symbol has been found
-                        #write symbol type to screen
-                        TextForScreen = "Found: Human" 
-                        cv2.putText(img,TextForScreen, (10,60), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0,255,0),1)
-                        #Only return data is a target has been identified
-                        TargetData = [boxcentrex, boxcentrey, Distance, vmfound, SymbolLocation, whratio]
-                        break
+    '''
+    if vmfound != -1: #If a symbol has been found
+        TextForScreen = "Found: Human"
+        cv2.putText(img,TextForScreen, (10,60), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0,255,0),1)
+        #Only return data is a target has been identified
+        TargetData = [boxcentrex, boxcentrey, Distance, vmfound, SymbolLocation, whratio]
+        
                         
           
     if DisplayImage is True:

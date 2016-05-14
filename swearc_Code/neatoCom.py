@@ -1,7 +1,7 @@
 #import XboxController
 import time
 import serial
-import csv
+#import csv
 
 def getScan():
     ser.timeout = 2
@@ -80,7 +80,7 @@ def iterativeTravel(angle,distance):
         print(setmotor)
         ser.write(setmotor.encode())
         time.sleep(2)
-    if distance > 0:
+    if (distance != 0):
         Lmotor = int(distance)
         Rmotor = int(distance)
         speed = 200
@@ -88,7 +88,8 @@ def iterativeTravel(angle,distance):
         setmotor = setmotor+"\n"
         print(setmotor)
         ser.write(setmotor.encode())
-        time.sleep(4)
+        time.sleep(3)
+        
 
 def playSound(sound):
     ser.write(b'playsound '+sound+'\n')
@@ -98,7 +99,6 @@ def closeSerial():
     ser.write(b'setldsrotation off\n')
     ser.write(b'playsound 3\n')
     ser.write(b'testmode off\n')
-##    xboxCont.stop()
     ser.close()
     print("serial port closed and xbox controller off")
 
@@ -110,22 +110,13 @@ T_old = T;
 try:
     ser = serial.Serial('/dev/ttyACM0')
     #time.sleep(5)
-##    xboxCont = XboxController.XboxController(
-##        controllerCallBack = None,
-##        joystickNo = 0,
-##        deadzone = 0.1,
-##        scale = 1,
-##        invertYAxis = True)
-##
-##    xboxCont.start()
-
     ser.write(b'testmode on\n')
-    time.sleep(0.3)
+    time.sleep(0.01)
     ser.write(b'playsound 0\n')
-    time.sleep(0.3)
-    ser.write(b'setldsrotation on\n')
-    time.sleep(4)
-    getBattery()
+    time.sleep(0.2)
+    #ser.write(b'setldsrotation on\n')
+    #time.sleep(1)
+    #getBattery()
     #getScan()
 
     speed = 0
@@ -135,30 +126,7 @@ try:
     lastSpeed = 0
     setmotor = ""
 
-#    while 1:
-#        T_old = T
-#        T = time.clock()
-#        dT = T - T_old
 
-#        time.sleep(0.1)
-##        diff = xboxCont.LTHUMBX*(2000 - 1000*xboxCont.LTHUMBY*xboxCont.LTHUMBY)
-##        speed = int(300*max(abs(xboxCont.LTHUMBY),abs(xboxCont.LTHUMBX)))
-##        Lmotor = int(xboxCont.LTHUMBY*1000+diff/2)
-##        Rmotor = int(xboxCont.LTHUMBY*1000-diff/2)
-##        #iterativeTravel(-90,100)
-##        #print(speed)
-##        if speed == 0:
-##            if speed != lastSpeed:
-##                #print("setmotor 1 1 10")
-##                ser.write(b'setmotor 1 1 10\n')
-##        else:
-##            setmotor = "setmotor "+str(Lmotor)+" "+str(Rmotor)+" "+str(speed)
-##            #print(setmotor)
-##            setmotor = setmotor+"\n"
-##            ser.write(setmotor.encode())
-##        lastSpeed = speed
-
-#Ctrl C
 except KeyboardInterrupt:
     print("\nUser cancelled")
     ser.write(b'setldsrotation off\n')

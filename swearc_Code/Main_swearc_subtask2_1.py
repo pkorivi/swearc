@@ -133,7 +133,7 @@ def MoveToTarget():
                             attarget = True
                             print 'target Reached'
                     return 1
-               ''' 
+                ''' 
                 else:
                     if TargetData[4] == "LEFT":
                         print 'Turn left'
@@ -150,7 +150,7 @@ def MoveToTarget():
                     Result = AlignToTarget()
                     if Result == -1:  
                         return -1
-                        '''
+                '''
             #else for target >100cm        
             else:
                 print "Target further than 100cm"

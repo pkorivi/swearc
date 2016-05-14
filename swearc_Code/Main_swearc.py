@@ -15,8 +15,9 @@ robotstate = ['start','SearchingTarget','NoTargetAround', 'MovingTowardsTarget',
              'Within_30cm', 'Button_Routine','Button_pressed', 'Button_Missed', 'Reading_QR','QR_error','Task_Finished']
 list(enumerate(robotstate))
 
-GrayObjects = [29,30,130,85,173,195]
-
+#GrayObjects = [29,30,130,85,173,195]
+GrayObjects = (0,132,124,209,232,223)#Red
+#GrayObjects = [0,0,124,186,60,160]
 #Switch case to implement state Machines
 class switch(object):
     def __init__(self, value):
@@ -53,7 +54,7 @@ def AlignToTarget():
             HeadPanAngle = HeadAngles[0]
             HeadTiltAngle = HeadAngles[1]
             print 'HeadPanAngle', HeadPanAngle 
-            if abs(HeadPanAngle) < 10: #When robot is looking at target, if head angle is less than 4 degrees either way
+            if abs(HeadPanAngle) < 6: #When robot is looking at target, if head angle is less than 4 degrees either way
                                       #then target is dead ahead
                 return 1 #if target has been found and robot is now facing target, return 1
             else: 
@@ -70,8 +71,6 @@ def LookAtTarget(X,Y):
     YCamAngle = math.atan(YDist/640.00)
     HeadTiltAngle = math.degrees(YCamAngle)
     HeadPanAngle =  math.degrees(XCamAngle)
-    #RobotData = HeadMove(HeadPanAngle,HeadTiltAngle, 8)
-    #RobotData = RobotMove(0,HeadPanAngle) 
     HeadAngles.append(HeadPanAngle)
     HeadAngles.append(HeadTiltAngle)
     return HeadAngles
@@ -107,7 +106,6 @@ def MoveToTarget():
                 if TargetData[2] < 30: #if target is too close
                     print "Target too close - Reversing"
                     RobotData = RobotMove(-100,0)
-                    #RobotData = RobotMove(ROBOTREVERSE, 30, AutoSpeed, 0, 255)#back up a bit
                 if TargetData[5] > -10 and TargetData[5] < 10: #Target ahead
                     print "Target straight Ahead !!"
                     attarget = False
@@ -116,12 +114,6 @@ def MoveToTarget():
                         print RobotData,'RobotData'
                         if (RobotData) > 60:
                             RobotData = RobotMove(150,0)
-                            '''
-                            Result = AlignToTarget()
-                            if Result == -1:  
-                                return -1
-                            print 'Change the code'
-                            '''
                         else:
                             attarget = True
                             print 'target Reached'
@@ -157,7 +149,8 @@ def MoveToTarget():
 def CheckForTarget(tries):
     print 'Check for Symbol'
     for x in range (0,tries):
-        TargetData = SWEARCOpenCV.FindSymbol(GrayObjects)
+        #TargetData = SWEARCOpenCV.FindSymbol(GrayObjects)
+        TargetData = SWEARCOpenCV.Find_red_circles(GrayObjects)
         print 'CFS : Target data', TargetData
         if TargetData != -1:#Target present          
             if TargetData[3] == 1: #if its the correct target type
@@ -182,7 +175,7 @@ def ScanForTarget():
     return returndata
 
 
-#########Need to be chnaged to a switch
+
 Run = True
 #robotstate = 'Reading_QR'
 robotstate = 'start'
@@ -267,11 +260,8 @@ while True:
 				break
 			if case('Button_pressed'):
 				print 'Button_pressed'
-                                #SWEARCOpenCV.stopcamera()
-				#Moving Back to see QR Code
-				RobotMove(0,180)
-				RobotMove(800,0)
-				RobotMove(0,180)
+				print 'Moving back to read QR'
+                                RobotMove(-800,0)
 				robotstate = 'Reading_QR'
 				break
 			if case('Button_Missed'):

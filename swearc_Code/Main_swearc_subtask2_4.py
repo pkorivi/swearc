@@ -16,6 +16,7 @@ import sonar
 import sys
 import RPi.GPIO as GPIO
 import serial
+import L_scannerpy
 
 robotstate = ['start','SearchingTarget','NoTargetAround', 'MovingTowardsTarget','Missed_Target','Obstacle_encountered', 'Within_100cm',\
              'Within_30cm', 'Button_Routine','Button_pressed', 'Button_Missed', 'Reading_QR','QR_error','Task_Finished']
@@ -112,7 +113,7 @@ def MoveToTarget(GivenLetter):
             print  "Target found in MoveToTarget"
             
             #if letter in Target Data == input direction then RobotMove.
-            if TargetData[6] = GivenLetter #or 'E', 'S', 'N'
+            if TargetData[6] == GivenLetter: #or 'E', 'S', 'N'
                 RobotData = RobotMove(200,0)
             # then stop... 
             
@@ -140,7 +141,7 @@ def MoveToTarget(GivenLetter):
 #                            attarget = True
 #                            print 'target Reached'
 #                    return 1
-                    '''
+                '''
                 else:
                     if TargetData[4] == "LEFT":
                         print 'Turn left'
@@ -157,7 +158,7 @@ def MoveToTarget(GivenLetter):
                     Result = AlignToTarget()
                     if Result == -1:  
                         return -1
-                        '''
+                '''
             #else for target >100cm        
 #            else:
 #                print "Target further than 100cm"

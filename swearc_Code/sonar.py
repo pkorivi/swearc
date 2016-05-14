@@ -109,10 +109,13 @@ time.sleep(1)
 # GPIO cleanup function. This will also prevent
 # the user seeing lots of unnecessary error
 # messages.
-#d = measure_mode()
-#print d
-#print d[0][0]
-
+'''
+while 1:
+  d = measure_mode()
+  print d
+  time.sleep(0.5)
+  #print d[0][0]
+'''
 '''
 try:
 
