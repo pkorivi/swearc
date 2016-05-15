@@ -25,11 +25,11 @@ void loop()
   i2cSendSignedLong(Motor_2,0, 3);			
   delay(100);		
         
-  Serial.println("Motor_1");                              // Serial print Motor_1
+  //Serial.println("Motor_1");                              // Serial print Motor_1
   i2cSendSignedLong(Motor_1,motor_counts, 8);			//set the absolute go to posuition (4) to 1800 counts
   //i2cReadSignedInt(Motor_1,3);                            // Read the Encoder Position.
   
-  Serial.println("Motor_2");                              // Serial print Motor_1
+  //Serial.println("Motor_2");                              // Serial print Motor_1
   i2cSendSignedLong(Motor_2,motor_counts, 8);      //set the absolute go to posuition (4) to 1800 counts
   //i2cReadSignedInt(Motor_2,3);
     
@@ -58,7 +58,7 @@ void loop()
 
     readSerialCmd();
     
-   delay(5000);																								
+   //delay(5000);																								
 } 
 
 
