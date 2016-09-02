@@ -3,7 +3,7 @@ import numpy as np
 from pyimagesearch.transform import four_point_transform
 import time
 import math
-import SWEARCOpenCV
+import Opencv_task1
 import neatoCom as robot
 import sonar
 import sys
@@ -139,7 +139,7 @@ def RobotMove(distance, angle):
         else:
             sleep = t_sleep_2_0+t_sleep_0_5
 
-    robot.iterativeTravel(angle,distance,sleep)
+    #robot.iterativeTravel(angle,distance,sleep)
     return 1
 
 
@@ -202,8 +202,8 @@ def MoveToTarget():
 def CheckForTarget(tries):
     print 'Check for Symbol'
     for x in range (0,tries):
-        #TargetData = SWEARCOpenCV.FindSymbol(GrayObjects)
-        TargetData = SWEARCOpenCV.Find_red_circles(GrayObjects)
+        #TargetData = Opencv_task1.FindSymbol(GrayObjects)
+        TargetData = Opencv_task1.Find_red_circles(GrayObjects)
         print 'CFS : Target data', TargetData
         if TargetData != -1:#Target present          
             if TargetData[3] == 1: #if its the correct target type
@@ -259,9 +259,9 @@ while True:
 				break #break for searchingtarget
 			if case('NoTargetAround'):
 				print 'NoTargetAround'
-				RobotData = RobotMove(0,90)
-				RobotData = RobotMove(300,0)
 				RobotData = RobotMove(0,-90)
+				RobotData = RobotMove(300,0)
+				RobotData = RobotMove(0,90)
 				robotstate = 'SearchingTarget'
 				break
 			if case('MovingTowardsTarget'):
@@ -294,7 +294,7 @@ while True:
 				break
 			if case('Button_Routine'):
 				print 'Button_Routine'
-				xcordi = SWEARCOpenCV.button_routine()
+				xcordi = Opencv_task1.button_routine()
 				if len(xcordi)==2:
                                     if (xcordi[0]-xcordi[1])>15:                                        #ARM IS TO RIGHT
                                         RobotMove(0,1)
@@ -324,7 +324,7 @@ while True:
 				break
 			if case('Reading_QR'):
 				print 'Reading_QR'                                
-				qr_ret = SWEARCOpenCV.QR_Read()
+				qr_ret = Opencv_task1.QR_Read()
 				if (qr_ret == 1):
                                     print 'QR Success'
                                     robotstate = 'Task_Finished'

@@ -1,0 +1,15 @@
+swearc_subtask_2_4 
+Navigation 
+
+parameters 
+- GivenLetter # letter pressed in for the destination by the judge (W,E,S,N)
+- Letter # letter read and detected from the sign (W,E,S,N)
+
+1. turn around and look for sign 
+
+2. look for letter in sign
+
+3. if letter in sign found & letter matched given letter 
+	else Look for sign
+
+4. Align to target (sign) and Drive 2-3 m forwards

@@ -74,7 +74,7 @@ def iterativeTravel(angle,distance,sleep):
     if angle != 0:
         Lmotor = int(angle*190/90)
         Rmotor = int(-Lmotor)
-        speed = 200
+        speed = 80
         setmotor = "setmotor "+str(Lmotor)+" "+str(Rmotor)+" "+str(speed)
         setmotor = setmotor+"\n"
         print(setmotor)
@@ -83,7 +83,7 @@ def iterativeTravel(angle,distance,sleep):
     if (distance != 0):
         Lmotor = int(distance)
         Rmotor = int(distance)
-        speed = 200
+        speed = 80
         setmotor = "setmotor "+str(Lmotor)+" "+str(Rmotor)+" "+str(speed)
         setmotor = setmotor+"\n"
         print(setmotor)

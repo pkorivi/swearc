@@ -85,7 +85,7 @@ while True:
         if seat_counter >= 3:
             print 'Empty Seat'
             #Glow LED for the seat / Display on Screen.
-            time.sleep(10)python 
+            time.sleep(10) 
             #Close_connection()
             
     else:

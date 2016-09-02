@@ -17,9 +17,8 @@ def RobotMove(distance, angle):
     return 1
 
 
-def button_detect(image):
+def button_detect(image, ThresholdArray):
     #boundaries = [([0,125,125],[209,215,225])]
-    ThresholdArray = [0,132,124,209,232,223]
     #for (lower,upper) in boundaries:
     #    lower = np.array(lower,dtype="uint8")
     #    upper = np.array(upper,dtype="uint8")
@@ -47,11 +46,14 @@ if DisplayImage is True:
     cv2.waitKey(50)
 '''
 def find_button(imgHSV):
-    img2 = button_detect(imgHSV)
+    Red_threshold = [0,132,124,209,232,223]
+    Green_threshold = [32,63,106,84,210,167]
     boxcentrex= []
     boxcentrey= []
     area =[]
-    print 'read imge'
+    '''
+    img2 = button_detect(imgHSV, Red_threshold)
+    print ' checking the button'
     #gray1 = cv2.cvtColor(img2,cv2.COLOR_HSV2GRAY)
     #cv2.imshow("gray",  gray1)
     _,contours, hierarchy = cv2.findContours(img2,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
@@ -62,14 +64,34 @@ def find_button(imgHSV):
             approxcontour = cv2.approxPolyDP(contours[x], 0.08 * arclength, True)
             #print len(approxcontour),' approxcontour'
             rect = cv2.minAreaRect(contours[x])
-            box = cv2.boxPoints(rect)
-            box = np.int0(box)
+            #box = cv2.boxPoints(rect)
+            #box = np.int0(box)
             print int(rect[0][0]),int(rect[0][1]),'centre'
             area.append(contourarea)
             boxcentrex.append(int(rect[0][0]))
             boxcentrey.append(int(rect[0][1]))
             cv2.drawContours(imgHSV,[approxcontour],0,(0,0,255),2)
             cv2.circle(imgHSV, (int(rect[0][0]), int(rect[0][1])), 5, (0,0,255),-1)
+    '''
+    img2 = button_detect(imgHSV, Green_threshold)
+    print 'Checking Target'
+    _,contours, hierarchy = cv2.findContours(img2,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    for x in range (len(contours)):
+        contourarea = cv2.contourArea(contours[x]) #get area of contour
+        if contourarea > 2500: #Discard contours with a small area as this may just be noise
+            arclength = cv2.arcLength(contours[x], True)
+            approxcontour = cv2.approxPolyDP(contours[x], 0.08 * arclength, True)
+            #print len(approxcontour),' approxcontour'
+            rect = cv2.minAreaRect(contours[x])
+            #box = cv2.boxPoints(rect)
+            #box = np.int0(box)
+            print int(rect[0][0]),int(rect[0][1]),'centre'
+            area.append(contourarea)
+            boxcentrex.append(int(rect[0][0]))
+            boxcentrey.append(int(rect[0][1]))
+            cv2.drawContours(imgHSV,[approxcontour],0,(0,0,255),2)
+            cv2.circle(imgHSV, (int(rect[0][0]), int(rect[0][1])), 5, (0,0,255),-1)
+
 
     
     print 'boxcentrex',boxcentrex[0],boxcentrex[1],'boxcentrey',boxcentrey[0],boxcentrey[1]

@@ -9,13 +9,15 @@ import sonar
 import sys
 import RPi.GPIO as GPIO
 import serial
+import pprint,os
 #import circles as button
 
 robotstate = ['start','SearchingTarget','NoTargetAround', 'MovingTowardsTarget','Missed_Target','Obstacle_encountered', 'Within_100cm',\
              'Within_30cm', 'Button_Routine','Button_pressed', 'Button_Missed', 'Reading_QR','QR_error','Task_Finished']
 list(enumerate(robotstate))
 
-Run = True
+Run = False
+button_pressed = False
 print 'To run the robot Should be replaced by switch'
 
 Thresh_head_pan = 4 #angle
@@ -26,8 +28,8 @@ Alighment_dist = 100 #mm
 Alignment_Angle = 60 #angle
 x_cordi_difference = 10 # pixels
 Robot_Move_dist = 200 #mm
-No_target_angle =60 #angle
-NO_target_loop_cnt = 6 #6*60 = 360
+No_target_angle =10 #angle
+NO_target_loop_cnt = 36 #6*60 = 360
 
 
 
@@ -45,13 +47,110 @@ t_sleep_9_0 = 9.0
 
 
 #GrayObjects = [29,30,130,85,173,195]
-GrayObjects = (0,132,124,209,232,223)#Red
+GrayObjects = (0,119,90,194,185,160)#Red
 #GrayObjects = [0,0,124,186,60,160]
+
+
+#Interrupt Routines
+
+
+
+def interrupt_start(channel1):
+    print 'Run Start Routine'
+    global Run
+    Run = True
+    print Run
+    
+
+def interrupt_emergency(channel1):
+    print 'Emergency Stop'
+    RobotMove(0,0)
+    GPIO.cleanup()
+    robot.closeSerial()
+    global Run
+    Run = False
+    sys.exit('Emergency Stop')
+    
+
+def interrupt_N(channel1):
+    pass
+
+def interrupt_E(channel1):
+    pass
+
+def interrupt_W(channel1):
+    pass
+
+def interrupt_S(channel1):
+    pass
+
+def interrupt_aurdino(channel1):
+    pass
+
+def interrupt_button_press(channel1):
+    global button_pressed
+    button_pressed = True
+    global robotstate
+    robotstate = 'Button_pressed'
+
+
+
+###################################
+#  PIN CONFIGURATION
+###################################
+
+GPIO.setmode(GPIO.BCM)
+#Start and Emergency Stop
+GPIO_Start = 23
+GPIO_Emergency = 24
+
+#Buttons for Task 2
+GPIO_N = 5
+GPIO_E = 6
+GPIO_W = 13
+GPIO_S = 19
+
+#Aurdino Interrupt
+GPIO_Aurdino = 26
+
+#Button for press detcetion
+GPIO_Button_press = 25
+
+#Configured as pullup, Input
+GPIO.setup(GPIO_Start,GPIO.IN, pull_up_down = GPIO.PUD_UP)
+GPIO.setup(GPIO_Emergency,GPIO.IN, pull_up_down = GPIO.PUD_UP)
+
+GPIO.setup(GPIO_N,GPIO.IN, pull_up_down = GPIO.PUD_UP)
+GPIO.setup(GPIO_E,GPIO.IN, pull_up_down = GPIO.PUD_UP)
+GPIO.setup(GPIO_W,GPIO.IN, pull_up_down = GPIO.PUD_UP)
+GPIO.setup(GPIO_S,GPIO.IN, pull_up_down = GPIO.PUD_UP)
+
+GPIO.setup(GPIO_Button_press,GPIO.IN, pull_up_down = GPIO.PUD_UP)
+
+GPIO.setup(GPIO_Aurdino,GPIO.IN, pull_up_down = GPIO.PUD_UP)
+
+#Interrupt Events
+GPIO.add_event_detect(GPIO_Start, GPIO.FALLING, callback = interrupt_start,\
+                      bouncetime = 2000)
+GPIO.add_event_detect(GPIO_Emergency, GPIO.FALLING, callback = interrupt_emergency,\
+                      bouncetime = 2000)
+GPIO.add_event_detect(GPIO_N, GPIO.FALLING, callback = interrupt_N,\
+                      bouncetime = 2000)
+GPIO.add_event_detect(GPIO_E, GPIO.FALLING, callback = interrupt_E,\
+                      bouncetime = 2000)
+GPIO.add_event_detect(GPIO_W, GPIO.FALLING, callback = interrupt_W,\
+                      bouncetime = 2000)
+GPIO.add_event_detect(GPIO_S, GPIO.FALLING, callback = interrupt_S,\
+                      bouncetime = 2000)
+GPIO.add_event_detect(GPIO_Aurdino, GPIO.FALLING, callback = interrupt_aurdino,\
+                      bouncetime = 2000)
+
+GPIO.add_event_detect(GPIO_Button_press, GPIO.FALLING, callback = interrupt_button_press,\
+                      bouncetime = 2000)
+
+
+
 #Switch case to implement state Machines
-
-
-
-
 class switch(object):
     def __init__(self, value):
         self.value = value
@@ -77,22 +176,22 @@ def GetData():
 
 def AlignToTarget():
     print 'Aligning to Target'
-    while True:
-        TargetData = CheckForTarget(1) #Check 3 times to see if target is still there
-        if TargetData == -1:
-            print " Lost Target "
-            return -1
-        else:#If target is still there, turn robot to face target
-            HeadAngles = LookAtTarget(TargetData[0], TargetData[1])
-            HeadPanAngle = HeadAngles[0]
-            HeadTiltAngle = HeadAngles[1]
-            print 'HeadPanAngle', HeadPanAngle 
-            if abs(HeadPanAngle) < Thresh_head_pan: #When robot is looking at target, if head angle is less than 4 degrees either way
+    #while True:
+    TargetData = CheckForTarget(1) #Check 3 times to see if target is still there
+    if TargetData == -1:
+        print " Lost Target "
+        return -1
+    else:#If target is still there, turn robot to face target
+        HeadAngles = LookAtTarget(TargetData[0], TargetData[1])
+        HeadPanAngle = HeadAngles[0]
+        HeadTiltAngle = HeadAngles[1]
+        print 'HeadPanAngle', HeadPanAngle 
+        if abs(HeadPanAngle) < Thresh_head_pan: #When robot is looking at target, if head angle is less than 4 degrees either way
                                       #then target is dead ahead
-                return 1 #if target has been found and robot is now facing target, return 1
-            else: 
-                print  "Target NOT ahead - Adjusting Heading"
-                TurnToTarget(HeadPanAngle, 3) #Turn to face target
+            return 1 #if target has been found and robot is now facing target, return 1
+        else: 
+            print  "Target NOT ahead - Adjusting Heading"
+            TurnToTarget(HeadPanAngle, 3) #Turn to face target
     return 1
 
 
@@ -146,9 +245,7 @@ def RobotMove(distance, angle):
 def MoveToTarget():
     print "Moving to Target"
     while True:
-        HeadPanAngle = 0
-        HeadTiltAngle = 0
-        TargetData = CheckForTarget(3)#Capture image and check for symbol
+        TargetData = CheckForTarget(2)#Capture image and check for symbol
         if TargetData == -1:
             print "No Target In Image"
             return -1 #if no target is found, return -1 immediately
@@ -191,6 +288,7 @@ def MoveToTarget():
             else:
                 print "Target further than 100cm"
                 Result = AlignToTarget()
+                print 'Aligning result ',Result
                 if Result ==1:
                     print "Moving Forward"
                     RobotData = RobotMove(Robot_Move_dist,0)
@@ -201,13 +299,14 @@ def MoveToTarget():
 
 def CheckForTarget(tries):
     print 'Check for Symbol'
+    #tries = 3
     for x in range (0,tries):
         #TargetData = SWEARCOpenCV.FindSymbol(GrayObjects)
         TargetData = SWEARCOpenCV.Find_red_circles(GrayObjects)
-        print 'CFS : Target data', TargetData
-        if TargetData != -1:#Target present          
-            if TargetData[3] == 1: #if its the correct target type
-                return TargetData #return straight away if correct symbol found
+    print 'CFS : Target data', TargetData
+    if TargetData != -1:#Target present          
+        if TargetData[3] == 1: #if its the correct target type
+            return TargetData #return straight away if correct symbol found
     return -1
 
 
@@ -240,6 +339,10 @@ while True:
 			if case('start'):
 				print 'Start - caliberate'
 				robotstate = 'SearchingTarget'
+				command = "espeak -ven+m1 -a 200 -p 30 -s 150 -g 12 'Its time to FInd Vending Machine' 2>/dev/null > /dev/null"
+                                os.system(command)
+                                last = 0
+                                time.sleep(4)				
 				break
 			if case('SearchingTarget'):
 				print 'SearchingTarget'
@@ -307,26 +410,40 @@ while True:
                                         print 'move forward'
                                         RobotData = GetData()
                                         print RobotData,'RobotData'
-                                        if (RobotData) < 30:
+                                        print 'GPIO',GPIO.input(GPIO_Button_press)
+                                        if (RobotData) < 40:
+                                            while(button_pressed == False):
+                                                sonar.move_servo(50)
+                                                RobotMove(15,0)
                                             robotstate = 'Button_pressed'
                                 else:
                                     robotstate = 'Button_Missed'
 				break
 			if case('Button_pressed'):
 				print 'Button_pressed'
-				print 'Moving back to read QR'
-                                RobotMove(-1300,0)
+				print 'Moving Back to Read QR Code'
+				command = "espeak -ven+m1 -a 200 -p 30 -s 150 -g 12 'Button Pressed, Time to read QR' 2>/dev/null > /dev/null"
+                                os.system(command)
+                                last = 0
+                                time.sleep(4)
+                                RobotMove(-1600,0)
 				robotstate = 'Reading_QR'
 				break
 			if case('Button_Missed'):
 				print 'Button_Missed'
-				robotstate = 'Reading_QR'
+				RobotMove(-100,0)
+				robotstate = 'Button_Routine'
 				break
 			if case('Reading_QR'):
-				print 'Reading_QR'                                
+				print 'Reading_QR'
+				time.sleep(5)
 				qr_ret = SWEARCOpenCV.QR_Read()
 				if (qr_ret == 1):
                                     print 'QR Success'
+                                    command = "espeak -ven+m1 -a 200 -p 30 -s 150 -g 12 'QR_Read' 2>/dev/null > /dev/null"
+                                    os.system(command)
+                                    last = 0
+                                    time.sleep(3)
                                     robotstate = 'Task_Finished'
                                 else:
                                     robotstate = 'QR_error'
@@ -337,6 +454,10 @@ while True:
 				break
                         if case('Task_Finished'):
 				print 'Task Fnished'
+				command = "espeak -ven+m1 -a 200 -p 30 -s 150 -g 12 'Task Finisged, Bye See You soon' 2>/dev/null > /dev/null"
+                                os.system(command)
+                                last = 0
+                                time.sleep(4)
                                 GPIO.cleanup()
 				robot.closeSerial()
 				sys.exit('Button ROutine not defined')

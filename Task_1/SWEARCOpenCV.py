@@ -38,7 +38,7 @@ Diatnce_aprox_value = 6
 
 
 #Find Button
-Button_Red_threshold = [0,132,124,209,232,223]
+Button_Red_threshold = [0,126,107,186,182,146]
 Target_Green_threshold = [32,63,106,84,210,167]
 Contr_Area_button_min = 2500
 Contr_Area_target_min = 2500
@@ -98,6 +98,10 @@ def FindSymbol(ThresholdArray):
     vmfound = -1
     time.sleep(0.1)#let image settle
     frame = vs.read()
+    frame = vs.read()
+    frame = vs.read()
+    frame = vs.read()
+    frame = vs.read()
     img = frame.copy()
     imgHSV = cv2.cvtColor(img,cv2.COLOR_BGR2HSV) #convert img to HSV and store result in imgHSVyellow
     lower = np.array([ThresholdArray[0],ThresholdArray[1],ThresholdArray[2]]) #np arrays for upper and lower thresholds
@@ -129,26 +133,6 @@ def FindSymbol(ThresholdArray):
                     gray1 = cv2.cvtColor(new_vm, cv2.COLOR_BGR2GRAY)
                     vmfound = 1
                     #Try and match image to known targets
-                    '''
-                    circles = cv2.HoughCircles(gray1.copy(), cv2.HOUGH_GRADIENT, 1.2, 100,param1=50,param2=90,minRadius=1,maxRadius=200)
-                    # ensure at least some circles were found
-                    if circles is not None:
-                        # convert the (x, y) coordinates and radius of the circles to integers
-                        circles = np.round(circles[0, :]).astype("int")
-                        # loop over the (x, y) coordinates and radius of the circles
-                        for (x, y, r) in circles:
-                            # draw the circle in the output image, then draw a rectangle
-                            # corresponding to the center of the circle
-                            cv2.circle(new_vm, (x, y), r, (0, 255, 0), 4)
-                            cv2.rectangle(new_vm, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
-                        # show the output image
-                        cv2.imshow("output",  new_vm)
-                        vmfound = 1
-                        #cv2.waitKey(0)
-                    else:
-                        print 'Circles are Doomed'
-                        #return -1
-                    '''
 
                     #Find lengths of the 4 sides of the target
                     leftedge = reformedcontour[3][1] - reformedcontour[0][1]
@@ -213,11 +197,14 @@ def FindSymbol(ThresholdArray):
 
 
 def Find_red_circles(ThresholdArray):
-    time.sleep(0.5)
+    #time.sleep(0.5)
     TargetData = -1
     SymbolFound = -1
     vmfound = -1
     time.sleep(0.1)#let image settle
+    frame = vs.read()
+    frame = vs.read()
+    frame = vs.read()
     frame = vs.read()
     img = frame.copy()
     imgHSV = cv2.cvtColor(img,cv2.COLOR_BGR2HSV) #convert img to HSV and store result in imgHSVyellow
@@ -239,9 +226,9 @@ def Find_red_circles(ThresholdArray):
             approxcontour = cv2.approxPolyDP(contours[x], Approx_poly_dp_arc * arclength, True) #Approximate contour to find square objects
             #print 'dimensions', len(approxcontour)
             if len(approxcontour) >= approx_cnt_dimen: #if approximated contour has 4 corner points
-                vmfound = 1
+                
                 rect = cv2.minAreaRect(contours[x])
-                print rect
+                #print rect
                 boxcentrex = int(rect[0][0])
                 boxcentrey = int(rect[0][1])
                 #cv2.drawContours(img,[approxcontour],0,(0,0,255),2)
@@ -251,11 +238,11 @@ def Find_red_circles(ThresholdArray):
                 #############
                 
                 approxcontour = cv2.approxPolyDP(contours[x], Approx_poly_dp_arc_rect_high * arclength, True) #Approximate contour to find square objects
-                print 'dimensions', len(approxcontour)
+                #print 'dimensions', len(approxcontour)
                 if len(approxcontour) == 4: #if approximated contour has 4 corner points
+                    vmfound = 1
                     rect = cv2.minAreaRect(contours[x])
                     reformedcontour = ReformContours(approxcontour) #make sure coordinates are in the correct order
-
                     leftedge = reformedcontour[3][1] - reformedcontour[0][1]
                     rightedge = reformedcontour[2][1] - reformedcontour[1][1]
                     topedge = reformedcontour[1][0] - reformedcontour[0][0]
@@ -343,16 +330,17 @@ def find_button(imgHSV):
         if contourarea > Contr_Area_button_min: #Discard contours with a small area as this may just be noise
             arclength = cv2.arcLength(contours[x], True)
             approxcontour = cv2.approxPolyDP(contours[x], 0.08 * arclength, True)
-            #print len(approxcontour),' approxcontour'
-            rect = cv2.minAreaRect(contours[x])
-            #box = cv2.boxPoints(rect)
-            #box = np.int0(box)
-            print int(rect[0][0]),int(rect[0][1]),'centre'
-            area.append(contourarea)
-            boxcentrex.append(int(rect[0][0]))
-            boxcentrey.append(int(rect[0][1]))
-            cv2.drawContours(imgHSV,[approxcontour],0,(0,0,255),2)
-            cv2.circle(imgHSV, (int(rect[0][0]), int(rect[0][1])), 5, (0,0,255),-1)
+            if len(approxcontour) == 4:
+                #print len(approxcontour),' approxcontour'
+                rect = cv2.minAreaRect(contours[x])
+                #box = cv2.boxPoints(rect)
+                #box = np.int0(box)
+                print int(rect[0][0]),int(rect[0][1]),'centre'
+                area.append(contourarea)
+                boxcentrex.append(int(rect[0][0]))
+                boxcentrey.append(int(rect[0][1]))
+                cv2.drawContours(imgHSV,[approxcontour],0,(0,0,255),2)
+                cv2.circle(imgHSV, (int(rect[0][0]), int(rect[0][1])), 5, (0,0,255),-1)
     #'''
     img2 = button_detect(imgHSV, Target_Green_threshold)
     print 'Checking Target'
@@ -362,16 +350,18 @@ def find_button(imgHSV):
         if contourarea > Contr_Area_target_min: #Discard contours with a small area as this may just be noise
             arclength = cv2.arcLength(contours[x], True)
             approxcontour = cv2.approxPolyDP(contours[x], 0.08 * arclength, True)
-            #print len(approxcontour),' approxcontour'
-            rect = cv2.minAreaRect(contours[x])
-            #box = cv2.boxPoints(rect)
-            #box = np.int0(box)
-            print int(rect[0][0]),int(rect[0][1]),'centre'
-            area.append(contourarea)
-            boxcentrex.append(int(rect[0][0]))
-            boxcentrey.append(int(rect[0][1]))
-            cv2.drawContours(imgHSV,[approxcontour],0,(0,0,255),2)
-            cv2.circle(imgHSV, (int(rect[0][0]), int(rect[0][1])), 5, (0,0,255),-1)
+            if len(approxcontour) == 4:
+                    
+                #print len(approxcontour),' approxcontour'
+                rect = cv2.minAreaRect(contours[x])
+                #box = cv2.boxPoints(rect)
+                #box = np.int0(box)
+                print int(rect[0][0]),int(rect[0][1]),'centre'
+                area.append(contourarea)
+                boxcentrex.append(int(rect[0][0]))
+                boxcentrey.append(int(rect[0][1]))
+                cv2.drawContours(imgHSV,[approxcontour],0,(0,0,255),2)
+                cv2.circle(imgHSV, (int(rect[0][0]), int(rect[0][1])), 5, (0,0,255),-1)
     #'''
 
     
@@ -387,9 +377,6 @@ def button_routine():
     imgHSV = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
     xcord = find_button(imgHSV)
     return xcord
-
-
-
 
 def stopcamera():
     cv2.destroyAllWindows()
@@ -437,7 +424,7 @@ def QR_Read():
     cv2.imshow('QR_Code',imG)
     cv2.waitKey(2000)
     json_data = QRDetect(imG)
-    if(json_data != 0):
+    if(json_data != None):
         print json_data
         return 1
     else:

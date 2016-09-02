@@ -8,15 +8,8 @@ import numpy as np
 import sys
 import math
 from pyimagesearch.transform import four_point_transform
-
-from picamera.array import PiRGBArray
-from picamera import PiCamera
-import time
-import imutils
 from imutils.video import VideoStream
 import datetime
-#import neatoCom as robot
-import serial
 import RPi.GPIO as GPIO
 import sys
 import zbar
@@ -50,7 +43,16 @@ print "Starting OpenCV"
 picamera = 0
 
 vs = VideoStream(usePiCamera = picamera > 0 ).start()
-
+im =  vs.read()
+time.sleep(0.05)
+im =  vs.read()
+time.sleep(0.05)
+im =  vs.read()
+im =  vs.read()
+time.sleep(0.05)
+im =  vs.read()
+time.sleep(0.05)
+im =  vs.read()
 
 if DisplayImage is True:
     cv2.namedWindow("camera", 0)
@@ -93,11 +95,18 @@ def ReformContours(contours):
 ##################################################################################################
 
 def FindSymbol(ThresholdArray):
+    print 'Vending Machine Check'
     TargetData = -1
     SymbolFound = -1
     vmfound = -1
     time.sleep(0.1)#let image settle
     frame = vs.read()
+    time.sleep(0.05)
+    frame = vs.read()
+    frame = vs.read()
+    time.sleep(0.05)
+    frame = vs.read()
+    
     img = frame.copy()
     imgHSV = cv2.cvtColor(img,cv2.COLOR_BGR2HSV) #convert img to HSV and store result in imgHSVyellow
     lower = np.array([ThresholdArray[0],ThresholdArray[1],ThresholdArray[2]]) #np arrays for upper and lower thresholds
@@ -116,39 +125,16 @@ def FindSymbol(ThresholdArray):
                 if hierarchy[0][x][2] != -1: #if contour has a child contour, which is image in centre of border
                     #find centre point of target
                     rect = cv2.minAreaRect(contours[x])
-                    box = cv2.boxPoints(rect)
-                    box = np.int0(box)
                     boxcentrex = int(rect[0][0])
                     boxcentrey = int(rect[0][1])
                     #correct perspective of found target and output to image named warp      
                     reformedcontour = ReformContours(approxcontour) #make sure coordinates are in the correct order
                     warp = four_point_transform(img.copy(), approxcontour.reshape(4, 2))
-                    cv2.imshow("transform", warp)
+                    cv2.imshow("output", warp)
                     cv2.waitKey(10)
                     new_vm = warp.copy()
                     gray1 = cv2.cvtColor(new_vm, cv2.COLOR_BGR2GRAY)
                     vmfound = 1
-                    #Try and match image to known targets
-                    '''
-                    circles = cv2.HoughCircles(gray1.copy(), cv2.HOUGH_GRADIENT, 1.2, 100,param1=50,param2=90,minRadius=1,maxRadius=200)
-                    # ensure at least some circles were found
-                    if circles is not None:
-                        # convert the (x, y) coordinates and radius of the circles to integers
-                        circles = np.round(circles[0, :]).astype("int")
-                        # loop over the (x, y) coordinates and radius of the circles
-                        for (x, y, r) in circles:
-                            # draw the circle in the output image, then draw a rectangle
-                            # corresponding to the center of the circle
-                            cv2.circle(new_vm, (x, y), r, (0, 255, 0), 4)
-                            cv2.rectangle(new_vm, (x - 5, y - 5), (x + 5, y + 5), (0, 128, 255), -1)
-                        # show the output image
-                        cv2.imshow("output",  new_vm)
-                        vmfound = 1
-                        #cv2.waitKey(0)
-                    else:
-                        print 'Circles are Doomed'
-                        #return -1
-                    '''
 
                     #Find lengths of the 4 sides of the target
                     leftedge = reformedcontour[3][1] - reformedcontour[0][1]
@@ -199,7 +185,7 @@ def FindSymbol(ThresholdArray):
                         TextForScreen = "Found: Vending Machine" 
                         cv2.putText(img,TextForScreen, (10,60), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0,255,0),1)
                         #Only return data is a target has been identified
-                        TargetData = [boxcentrex, boxcentrey, Distance, vmfound, SymbolLocation, EdgeDifference]
+                        TargetData = [boxcentrex, boxcentrey, Distance, vmfound, SymbolLocation, whratio]
                         break
                         
           
@@ -213,11 +199,17 @@ def FindSymbol(ThresholdArray):
 
 
 def Find_red_circles(ThresholdArray):
+    print 'Circles and Stuff'
     time.sleep(0.5)
     TargetData = -1
     SymbolFound = -1
     vmfound = -1
     time.sleep(0.1)#let image settle
+    frame = vs.read()
+    time.sleep(0.05)
+    frame = vs.read()
+    frame = vs.read()
+    time.sleep(0.05)
     frame = vs.read()
     img = frame.copy()
     imgHSV = cv2.cvtColor(img,cv2.COLOR_BGR2HSV) #convert img to HSV and store result in imgHSVyellow
@@ -228,7 +220,6 @@ def Find_red_circles(ThresholdArray):
     cv2.imshow("output",  imgthreshed)
     cv2.waitKey(5)
     
-    print 'For loop'
     # Contours and stuff
     _,contours, hierarchy = cv2.findContours(imgthreshed,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)  
     for x in range (len(contours)):
@@ -237,11 +228,10 @@ def Find_red_circles(ThresholdArray):
         if contourarea > Contour_area_find_circles: #Discard contours with a small area as this may just be noise
             arclength = cv2.arcLength(contours[x], True)
             approxcontour = cv2.approxPolyDP(contours[x], Approx_poly_dp_arc * arclength, True) #Approximate contour to find square objects
-            #print 'dimensions', len(approxcontour)
+            print 'dimensions_circle', len(approxcontour)
             if len(approxcontour) >= approx_cnt_dimen: #if approximated contour has 4 corner points
-                vmfound = 1
                 rect = cv2.minAreaRect(contours[x])
-                print rect
+                #print rect
                 boxcentrex = int(rect[0][0])
                 boxcentrey = int(rect[0][1])
                 #cv2.drawContours(img,[approxcontour],0,(0,0,255),2)
@@ -251,8 +241,9 @@ def Find_red_circles(ThresholdArray):
                 #############
                 
                 approxcontour = cv2.approxPolyDP(contours[x], Approx_poly_dp_arc_rect_high * arclength, True) #Approximate contour to find square objects
-                print 'dimensions', len(approxcontour)
+                print 'dimensions_rect', len(approxcontour)
                 if len(approxcontour) == 4: #if approximated contour has 4 corner points
+                    vmfound = 1
                     rect = cv2.minAreaRect(contours[x])
                     reformedcontour = ReformContours(approxcontour) #make sure coordinates are in the correct order
 
@@ -276,13 +267,13 @@ def Find_red_circles(ThresholdArray):
                     #Find which way symbol is facing and width of target to gauge angle
                     EdgeDifference = leftedge - rightedge
                     if EdgeDifference > 0:
-                        print "Symbol is to the robots right"
+                        #print "Symbol is to the robots right"
                         SymbolLocation = "RIGHT"
                     elif EdgeDifference == 0:
-                        print "Symbol is dead ahead"
+                        #print "Symbol is ahead"
                         SymbolLocation = "AHEAD"
                     else:
-                        print "Symbol is to the robots left"
+                        #print "Symbol is to the robots left"
                         SymbolLocation = "LEFT"
 
                     width = (topedge + bottomedge) / 2
@@ -299,9 +290,9 @@ def Find_red_circles(ThresholdArray):
                         #Only return data is a target has been identified
                         TargetData = [boxcentrex, boxcentrey, Distance, vmfound, SymbolLocation, EdgeDifference]
                         cv2.drawContours(img,[approxcontour],0,(0,0,255),2)
-                        print TargetData
+                        #print 'TargetData Opencv:',TargetData
                         break
-                            
+
     cv2.imshow("camera", img)            
 
     return TargetData
@@ -381,7 +372,12 @@ def find_button(imgHSV):
     return boxcentrex
 
 def button_routine():
-    img= vs.read()
+    img = vs.read()
+    time.sleep(0.05)
+    img = vs.read()
+    img = vs.read()
+    time.sleep(0.05)
+    img = vs.read()
     cv2.imshow('img',img)
     cv2.waitKey(1000)
     imgHSV = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
@@ -430,6 +426,10 @@ def QR_Read():
     #frcamera.release()
     time.sleep(1)
     im =  vs.read()
+    time.sleep(0.05)
+    im =  vs.read()
+    im =  vs.read()
+    time.sleep(0.05)
     im =  vs.read()
     im =  vs.read()
     im =  vs.read()
